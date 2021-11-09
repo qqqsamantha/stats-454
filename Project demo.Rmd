@@ -7,3 +7,27 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(tidybayes)
+library(rstan)
+library(rstanarm)
+library(bayesplot)
+library(bayesrules)
+library(broom.mixed)
+library(pracma)
+hotel <- read.csv("https://raw.githubusercontent.com/yiyangshi-hub/STAT454-Project/main/hotel_bookings.csv")
+```
+
+```{r}
+# random sample 1000 rows from the big dataframe 'hotel'
+set.seed(123)
+hotel_sub <- sample_n(hotel, 1000)
+```
+
+```{r}
+
+```
+
