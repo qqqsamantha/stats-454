@@ -28,6 +28,7 @@ hotel_sub <- sample_n(hotel, 1000)
 ```
 
 ```{r}
-
+hotel_sub %>% 
+  head()
 ```
 
