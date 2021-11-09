@@ -28,6 +28,8 @@ hotel_sub <- sample_n(hotel, 1000)
 ```
 
 ```{r}
-
+hotel_sub %>% 
+  ggplot(aes(x = hotel))+
+  geom_bar()
 ```
 
