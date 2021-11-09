@@ -18,18 +18,91 @@ library(bayesplot)
 library(bayesrules)
 library(broom.mixed)
 library(pracma)
+library(probably)
 hotel <- read.csv("https://raw.githubusercontent.com/yiyangshi-hub/STAT454-Project/main/hotel_bookings.csv")
 ```
 
 ```{r}
+hotel %>% 
+  count(country)
+
+hotel <- hotel %>% 
+  select(-reservation_status, -reservation_status_date,-company, -arrival_date_day_of_month) %>% 
+  filter(country %in%
+           c("AUT","BEL","BRA","CHE","CHN","CN","DEU","ESP","FRA","GBR","IRL",
+             "ISR","ITA","NLD","NOR","POL","PRT","RUS","SWE","USA"))
+
 # random sample 1000 rows from the big dataframe 'hotel'
 set.seed(123)
 hotel_sub <- sample_n(hotel, 1000)
 ```
 
 ```{r}
-hotel_sub %>% 
-  ggplot(aes(x = hotel))+
-  geom_bar()
+
+```
+
+
+```{r}
+log_model<- stan_glm(
+  is_canceled ~ ., data = hotel_sub,
+  family = binomial,
+  chains = 4, iter = 5000*2, seed = 123, refresh = 0)
+```
+
+```{r}
+pp_check(log_model)
+```
+
+```{r}
+set.seed(123)
+data_cv10 <- vfold_cv(hotel_sub, v = 10)
+
+
+# Logistic LASSO Regression Model Spec
+logistic_lasso_spec_tune <- logistic_reg() %>%
+    set_engine('glmnet') %>%
+    set_args(mixture = 1, penalty = tune()) %>%
+    set_mode('classification')
+
+# Recipe
+logistic_rec <- recipe(is_canceled ~ ., data = hotel_sub) %>%
+    step_normalize(all_numeric_predictors()) %>% 
+    step_dummy(all_nominal_predictors())
+
+# Workflow (Recipe + Model)
+log_lasso_wf <- workflow() %>% 
+    add_recipe(logistic_rec) %>%
+    add_model(logistic_lasso_spec_tune) 
+
+# Tune Model (trying a variety of values of Lambda penalty)
+penalty_grid <- grid_regular(
+  penalty(range = c(-6,1)), #log10 transformed  (kept moving min down from 0)
+  levels = 100)
+
+tune_output <- tune_grid( 
+  log_lasso_wf, # workflow
+  resamples = data_cv10, # cv folds
+  metrics = metric_set(roc_auc,accuracy),
+  control = control_resamples(save_pred = TRUE, event_level = 'second'),
+  grid = penalty_grid # penalty grid defined above
+)
+
+# Visualize Model Evaluation Metrics from Tuning
+autoplot(tune_output) + theme_classic()
+```
+
+```{r}
+best_se_penalty <- 
+  select_by_one_std_err(tune_output, 
+                        metric = 'roc_auc', 
+                        desc(penalty)) 
+# choose penalty value based on the largest penalty within 1 se of the highest CV roc_auc
+best_se_penalty
+```
+```{r}
+final_fit_se <- finalize_workflow(log_lasso_wf, best_se_penalty) %>% # incorporates penalty value to workflow 
+    fit(data = hotel_sub)
+
+final_fit_se %>% tidy()
 ```
 
