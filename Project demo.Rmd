@@ -55,18 +55,6 @@ summary(logistic_model_1)$coefficients
 ```
 
 ```{r}
-
-```
-
-
-```{r}
-log_model<- stan_glm(
-  is_canceled ~ ., data = hotel_sub,
-  family = binomial,
-  chains = 4, iter = 5000*2, seed = 123, refresh = 0)
-```
-
-```{r}
 pp_check(log_model)
 ```
 
