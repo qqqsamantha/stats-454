@@ -28,6 +28,23 @@ hotel_sub <- sample_n(hotel, 1000)
 ```
 
 ```{r}
-hotel_sub
+hotel_sub%>%
+  head()
+```
+
+```{r}
+set.seed(84735)
+logistic_model_1 <- stan_glm(
+  is_canceled ~. , data = hotel_sub,
+  family = binomial,
+  chains = 4, iter = 5000*2, seed = 84735, refresh = 0)
+```
+
+```{r}
+summary(logistic_model_1)$coefficients
+```
+
+```{r}
+
 ```
 
