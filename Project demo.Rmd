@@ -12,6 +12,7 @@ library(dplyr)
 library(ggplot2)
 library(tidyverse)
 library(tidybayes)
+library(tidymodels)
 library(rstan)
 library(rstanarm)
 library(bayesplot)
@@ -23,10 +24,7 @@ hotel <- read.csv("https://raw.githubusercontent.com/yiyangshi-hub/STAT454-Proje
 ```
 
 ```{r}
-hotel %>% 
-  count(country)
-
-hotel <- hotel %>% 
+hotel_clean <- hotel %>% 
   select(-reservation_status, -reservation_status_date,-company, -arrival_date_day_of_month) %>% 
   filter(country %in%
            c("AUT","BEL","BRA","CHE","CHN","CN","DEU","ESP","FRA","GBR","IRL",
@@ -34,7 +32,7 @@ hotel <- hotel %>%
 
 # random sample 1000 rows from the big dataframe 'hotel'
 set.seed(123)
-hotel_sub <- sample_n(hotel, 1000)
+hotel_sub <- sample_n(hotel_clean, 1000)
 ```
 
 ```{r}
@@ -43,23 +41,16 @@ hotel_sub%>%
 ```
 
 ```{r}
-set.seed(84735)
+set.seed(123)
 logistic_model_1 <- stan_glm(
   is_canceled ~. , data = hotel_sub,
   family = binomial,
-  chains = 4, iter = 5000*2, seed = 84735, refresh = 0)
-```
-
-```{r}
-summary(logistic_model_1)$coefficients
-```
-
-```{r}
-pp_check(log_model)
+  chains = 4, iter = 5000*2, seed = 123, refresh = 0)
 ```
 
 ```{r}
 set.seed(123)
+
 data_cv10 <- vfold_cv(hotel_sub, v = 10)
 
 
