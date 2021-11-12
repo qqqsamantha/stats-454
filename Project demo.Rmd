@@ -25,10 +25,12 @@ hotel <- read.csv("https://raw.githubusercontent.com/yiyangshi-hub/STAT454-Proje
 
 ```{r}
 hotel_clean <- hotel %>% 
-  select(-reservation_status, -reservation_status_date,-company, -arrival_date_day_of_month) %>% 
+  select(-reservation_status, -reservation_status_date,-company, -arrival_date_day_of_month, -days_in_waiting_list, -agent) %>% 
   filter(country %in%
            c("AUT","BEL","BRA","CHE","CHN","CN","DEU","ESP","FRA","GBR","IRL",
-             "ISR","ITA","NLD","NOR","POL","PRT","RUS","SWE","USA"))
+             "ISR","ITA","NLD","NOR","POL","PRT","RUS","SWE","USA")) %>% 
+  na.omit()
+
 
 # random sample 1000 rows from the big dataframe 'hotel'
 set.seed(123)
@@ -63,7 +65,11 @@ logistic_lasso_spec_tune <- logistic_reg() %>%
 # Recipe
 logistic_rec <- recipe(is_canceled ~ ., data = hotel_sub) %>%
     step_normalize(all_numeric_predictors()) %>% 
-    step_dummy(all_nominal_predictors())
+    step_dummy(all_nominal_predictors()) %>% 
+    step_nzv(all_predictors()) %>%
+    step_corr(all_predictors()) %>% 
+    step_mutate(arrival_date_month = factor(arrival_date_month),
+                arrival_date_year = factor(arrival_date_year))
 
 # Workflow (Recipe + Model)
 log_lasso_wf <- workflow() %>% 
@@ -72,7 +78,7 @@ log_lasso_wf <- workflow() %>%
 
 # Tune Model (trying a variety of values of Lambda penalty)
 penalty_grid <- grid_regular(
-  penalty(range = c(-6,1)), #log10 transformed  (kept moving min down from 0)
+  penalty(range = c(-5,1)), #log10 transformed  (kept moving min down from 0)
   levels = 100)
 
 tune_output <- tune_grid( 
@@ -84,6 +90,7 @@ tune_output <- tune_grid(
 )
 
 # Visualize Model Evaluation Metrics from Tuning
+# ALL OF THE MODELS FAILED, MIGHT BECAUSE OF THE RECIPE ABOVE
 autoplot(tune_output) + theme_classic()
 ```
 
