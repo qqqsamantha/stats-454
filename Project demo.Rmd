@@ -43,11 +43,11 @@ hotel_sub%>%
 ```
 
 ```{r}
-set.seed(123)
-logistic_model_1 <- stan_glm(
-  is_canceled ~. , data = hotel_sub,
-  family = binomial,
-  chains = 4, iter = 5000*2, seed = 123, refresh = 0)
+# set.seed(123)
+# logistic_model_1 <- stan_glm(
+#   is_canceled ~. , data = hotel_sub,
+#   family = binomial,
+#   chains = 4, iter = 5000*2, seed = 123, refresh = 0)
 ```
 
 ```{r}
@@ -65,32 +65,34 @@ logistic_lasso_spec_tune <- logistic_reg() %>%
 # Recipe
 logistic_rec <- recipe(is_canceled ~ ., data = hotel_sub) %>%
     step_normalize(all_numeric_predictors()) %>% 
-    step_dummy(all_nominal_predictors()) %>% 
-    step_nzv(all_predictors()) %>%
+    step_dummy(all_nominal_predictors()) %>%  
+    step_nzv(all_predictors()) %>% 
     step_corr(all_predictors()) %>% 
-    step_mutate(arrival_date_month = factor(arrival_date_month),
-                arrival_date_year = factor(arrival_date_year))
+    step_mutate(is_canceled = factor(is_canceled))
+    # factor more categorical variables later on
+
 
 # Workflow (Recipe + Model)
 log_lasso_wf <- workflow() %>% 
     add_recipe(logistic_rec) %>%
     add_model(logistic_lasso_spec_tune) 
 
-# Tune Model (trying a variety of values of Lambda penalty)
+
+# Tune Model
 penalty_grid <- grid_regular(
   penalty(range = c(-5,1)), #log10 transformed  (kept moving min down from 0)
-  levels = 100)
+  levels = 30)
 
 tune_output <- tune_grid( 
-  log_lasso_wf, # workflow
-  resamples = data_cv10, # cv folds
+  log_lasso_wf,
+  resamples = data_cv10,
   metrics = metric_set(roc_auc,accuracy),
   control = control_resamples(save_pred = TRUE, event_level = 'second'),
-  grid = penalty_grid # penalty grid defined above
+  grid = penalty_grid 
 )
 
 # Visualize Model Evaluation Metrics from Tuning
-# ALL OF THE MODELS FAILED, MIGHT BECAUSE OF THE RECIPE ABOVE
+# ALL OF THE MODELS FAILED, BECAUSE OF THE RECIPE ABOVE
 autoplot(tune_output) + theme_classic()
 ```
 
