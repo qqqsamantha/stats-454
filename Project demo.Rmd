@@ -92,7 +92,6 @@ tune_output <- tune_grid(
 )
 
 # Visualize Model Evaluation Metrics from Tuning
-# ALL OF THE MODELS FAILED, BECAUSE OF THE RECIPE ABOVE
 autoplot(tune_output) + theme_classic()
 ```
 
