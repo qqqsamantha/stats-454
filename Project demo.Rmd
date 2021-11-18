@@ -50,6 +50,7 @@ hotel_sub%>%
 #   chains = 4, iter = 5000*2, seed = 123, refresh = 0)
 ```
 
+
 ```{r}
 set.seed(123)
 
