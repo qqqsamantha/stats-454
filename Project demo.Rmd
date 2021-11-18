@@ -34,7 +34,8 @@ hotel_clean <- hotel %>%
 
 # random sample 1000 rows from the big dataframe 'hotel'
 set.seed(123)
-hotel_sub <- sample_n(hotel_clean, 1000)
+hotel_sub <- sample_n(hotel_clean, 1000) %>% 
+  mutate(arrival_date_year = as_character(arrival_date_year))
 ```
 
 ```{r}
@@ -183,9 +184,6 @@ hs_prior <- hs(df=1, global_df=1, global_scale=tau0)
 t_prior <- student_t(df = 26, location = 0, scale = 2.5)
 ```
 
-```{r}
-round(coef(post2), 8)
-```
 
 
 ```{r}
@@ -198,10 +196,33 @@ post2 <- stan_glm(is_canceled~hotel+lead_time+arrival_date_year+arrival_date_mon
                  seed = 123,adapt_delta = 0.9999)
 ```
 
+is_canceled~hotel+lead_time+arrival_date_year+arrival_date_month+arrival_date_week_number+stays_in_weekend_nights+stays_in_week_nights+adults+children+babies+meal+country+market_segment+distribution_channel+is_repeated_guest+previous_cancellations+previous_bookings_not_canceled+reserved_room_type+assigned_room_type+booking_changes+deposit_type+customer_type+adr+required_car_parking_spaces+total_of_special_requests
+```{r fig.width=8,fig.height=8}
+pplot <- plot(post2, "areas", prob = 0.95, prob_outer = 1)
+# pplot + geom_vline(xintercept = 0)+
+#   xlim(-50,50)
+mcmc_areas(post2,
+           pars = vars(lead_time,starts_with("country")))
+
+mcmc_intervals(post2,
+               pars = vars(lead_time,starts_with("country")))
+```
+```{r}
+library(tidyverse)
+library(caret)
+library(GGally)
+library(ggplot2)
+library(corrplot)
+library(bayesplot)
+theme_set(bayesplot::theme_default(base_family = "sans"))
+library(rstanarm)
+options(mc.cores = parallel::detectCores())
+library(loo)
+library(projpred)
+```
 
 ```{r}
-pplot <- plot(post2, "areas", prob = 0.95, prob_outer = 1)
-pplot + geom_vline(xintercept = 0)
+varsel2 <- cv_varsel(post2, method='forward', nloo = 1000)
 ```
 
 ```{r}
