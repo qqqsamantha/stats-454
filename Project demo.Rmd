@@ -23,19 +23,35 @@ library(probably)
 hotel <- read.csv("https://raw.githubusercontent.com/yiyangshi-hub/STAT454-Project/main/hotel_bookings.csv")
 ```
 
+### Data Clean up
 ```{r}
 hotel_clean <- hotel %>% 
   select(-reservation_status, -reservation_status_date,-company, -arrival_date_day_of_month, -days_in_waiting_list, -agent) %>% 
   filter(country %in%
            c("AUT","BEL","BRA","CHE","CHN","CN","DEU","ESP","FRA","GBR","IRL",
              "ISR","ITA","NLD","NOR","POL","PRT","RUS","SWE","USA")) %>% 
+  mutate(is_canceled = factor(is_canceled),
+         hotel = factor(hotel),
+         arrival_date_year = factor(arrival_date_year),
+         arrival_date_month = factor(arrival_date_month),
+         arrival_date_week_number = factor(arrival_date_week_number),
+         meal = factor(meal),
+         market_segment = factor(market_segment),
+         distribution_channel = factor(distribution_channel),
+         is_repeated_guest = factor(is_repeated_guest),
+         reserved_room_type = factor(reserved_room_type),
+         assigned_room_type = factor(assigned_room_type),
+         deposit_type = factor(deposit_type),
+         customer_type = factor(customer_type),
+         previous_cancellations = factor(previous_cancellations),
+         country = factor(country),
+         ) %>% 
   na.omit()
 
 
 # random sample 1000 rows from the big dataframe 'hotel'
 set.seed(123)
-hotel_sub <- sample_n(hotel_clean, 1000) %>% 
-  mutate(arrival_date_year = as_character(arrival_date_year))
+hotel_sub <- sample_n(hotel_clean, 1000)
 ```
 
 ```{r}
@@ -43,15 +59,56 @@ hotel_sub%>%
   head()
 ```
 
+### Data Visualization
+> In deciding whether the hotel is going to be canceled, we are curious in if the type of the hotel will affect the result. 
+
+> First, we construct a plot for the type of hotel vs is_canceled.
+
 ```{r}
-# set.seed(123)
-# logistic_model_1 <- stan_glm(
-#   is_canceled ~. , data = hotel_sub,
-#   family = binomial,
-#   chains = 4, iter = 5000*2, seed = 123, refresh = 0)
+hotel_clean %>% 
+  ggplot(aes(x = hotel)) +
+  geom_bar()
+
+hotel_clean %>% 
+  ggplot(aes(x = hotel, fill = is_canceled)) +
+  geom_bar(position = "fill")
 ```
 
+> Then we see that in general, there are more city hotel than resort hotel in our dataset. However, when looking at the hotels that have been canceled, it is more likely for the City Hotel to be canceled than Resort Hotel. 
 
+> Then we may wondering if this can be explained by the customers' own behavior, eg. some customers are more likely to cancel the hotel than others. Then we look at previous cancellations which may reflect the customers behaviors.
+
+```{r}
+hotel_sub %>% 
+  ggplot(aes(x = previous_cancellations, fill = is_canceled)) +
+  geom_bar(position = "fill")
+```
+
+> From the graph above, we can see that those who did not cancel last time are also less likely to cancel this time than those who did cancel. 
+
+> We may wondering if we could combine these information together.
+
+```{r}
+hotel_sub %>% 
+  ggplot(aes(x = hotel, fill = previous_cancellations)) +
+  geom_bar(position = "fill")
+```
+
+> It is clear that for those who previously canceled, there are more City Hotel than Resort Hotel.
+
+> Thus, we would love to see how this affect the cancellation result.
+
+```{r}
+ggplot(hotel_sub, aes(x = hotel, y = is_canceled, color = previous_cancellations)) +
+  geom_jitter(height = 0.25)
+```
+
+> We can see a clear cluster that those which is a City Hotel and who has previously canceled the hotel would devote the most cases to the hotel cancellations. Hotel type and previous_cancellations are 2 strong predictors.
+
+> So we may wondering what other predictors, like Hotel type and previous_cancellations, can be used to model the hotel cancellations. Then we would dig deeper into model building.
+
+
+### Frequentist Penalty Selection of LASSO Logistic Regression
 ```{r}
 set.seed(123)
 
@@ -112,16 +169,82 @@ final_fit_se <- finalize_workflow(log_lasso_wf, best_se_penalty) %>% # incorpora
 final_fit_se %>% tidy()
 ```
 
-hs_prior
+
+### Bayesian Logistic prior
 ```{r}
-#p0 <- 2 # prior guess for the number of relevant variables
-#tau0 <- p0/(p-p0) * 1/sqrt(n)
-#hs_prior <- hs(df=1, global_df=1, global_scale=tau0)
-#t_prior <- student_t(df = 7, location = 0, scale = 2.5)
-#post2 <- stan_glm(outcome ~ ., data = diabetes,
-                 #family = binomial(link = "logit"), 
-                 #prior = hs_prior, prior_intercept = t_prior,
-                 #seed = SEED, adapt_delta = 0.9)
+# set.seed(123)
+# logistic_model_1 <- stan_glm(
+#   is_canceled ~. , data = hotel_sub,
+#   family = binomial,
+#   chains = 4, iter = 5000*2, seed = 123, refresh = 0)
+```
+
+
+### Bayesian Lasso logistic prior and horseshoe prior
+```{r}
+set.seed(123)
+#bayesian lasso logistic prior
+bayes_lasso_log <- 
+  stan_glm(is_canceled ~ .,
+         family = binomial(), 
+         prior = lasso(df = 10, location = 0, scale = 2.5,autoscale = TRUE),
+         prior_intercept = normal(location = 0, scale = 10),
+         prior_aux = exponential(rate = 1, autoscale = TRUE),
+         data = hotel_sub)
+
+tidy(bayes_lasso_log)
+
+
+# horseshoe prior
+p0 <- 10
+tau0 <- p0/(26-p0) * 1/sqrt(1000)
+hs_prior <- hs(df=1, global_df=1, global_scale=tau0)
+logistic_model_1 <- stan_glm(
+  is_canceled ~. , data = hotel_sub,
+  family = binomial,
+  prior = hs_prior,
+  chains = 4, iter = 500*2, seed = 123, refresh = 0)
+```
+
+```{r}
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("country")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("arrival_date_year")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("arrival_date_month")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("arrival_date_week")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("is_repeated_guest"),
+                           starts_with("previous_cancellations"),
+                           starts_with("distribution_channel"),
+                           starts_with("market_segment"),
+                           starts_with("meal")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("reserved_room_type"),
+                           starts_with("assigned_room_type"),
+                           starts_with("deposit_type"),
+                           starts_with("customer_type")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(lead_time,
+                           stays_in_weekend_nights,
+                           stays_in_week_nights,
+                           adults,
+                           children,
+                           babies,
+                           previous_bookings_not_canceled,
+                           booking_changes,
+                           adr,
+                           required_car_parking_spaces,
+                           total_of_special_requests))
+```
 ```
 
 ```{r}
@@ -207,6 +330,7 @@ mcmc_areas(post2,
 mcmc_intervals(post2,
                pars = vars(lead_time,starts_with("country")))
 ```
+
 ```{r}
 library(tidyverse)
 library(caret)
