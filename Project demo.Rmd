@@ -194,7 +194,8 @@ bayes_lasso_log <-
 
 tidy(bayes_lasso_log)
 
-
+```
+```{r}
 # horseshoe prior
 p0 <- 10
 tau0 <- p0/(26-p0) * 1/sqrt(1000)
@@ -205,6 +206,19 @@ logistic_model_1 <- stan_glm(
   prior = hs_prior,
   chains = 4, iter = 500*2, seed = 123, refresh = 0)
 ```
+
+```{r}
+set.seed(123)
+post2 <- stan_glm(is_canceled~.,
+                  data = hotel_sub,
+                 family = binomial(link = "logit"), 
+                 prior = hs_prior, 
+                 chains = 2, iter = 500*2, 
+                 seed = 123,
+                 control = list(adapt_delta = 0.999, stepsize = 0.001,max_treedepth = 25),
+                 refresh = 0)
+```
+
 
 ```{r}
 mcmc_intervals(bayes_lasso_log,
