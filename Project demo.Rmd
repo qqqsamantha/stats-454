@@ -215,8 +215,7 @@ log_hs_model <- stan_glm(is_canceled~.,
                   refresh = 0)
 ```
 ```{r}
-log_hs_model_test <- readRDS(here("models","log_hs_model.rds"))
-pp_check(log_hs_model_test)
+# log_hs_model_test <- readRDS(here("models","log_hs_model.rds"))
 ```
 
 ```{r}
