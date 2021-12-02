@@ -292,7 +292,7 @@ log_hs_model_updated <- stan_glm(is_canceled~.-lead_time -stays_in_weekend_night
                                  max_treedepth = 25),
                   refresh = 0)
 
-# saveRDS(log_hs_model_updated,file=here("models","log_hs_model_updatd.rds"))
+# saveRDS(log_hs_model_updated,file=here("models","log_hs_model_updated.rds"))
 ```
 
 ```{r}
