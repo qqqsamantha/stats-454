@@ -99,9 +99,7 @@ hotel_sub %>%
 > Thus, we would love to see how this affect the cancellation result.
 
 ```{r}
-ggplot(hotel_sub, aes(x = hotel, 
-                      y = is_canceled, 
-                      color = previous_cancellations)) +
+ggplot(hotel_sub, aes(x = hotel, y = is_canceled, color = previous_cancellations)) +
   geom_jitter(height = 0.25)
 ```
 
@@ -197,66 +195,28 @@ bayes_lasso_log <-
 tidy(bayes_lasso_log)
 
 ```
-
 ```{r}
 # horseshoe prior
-p0 <- 20
+p0 <- 10
 tau0 <- p0/(26-p0) * 1/sqrt(1000)
 hs_prior <- hs(df=1, global_df=1, global_scale=tau0)
-log_hs_model <- stan_glm(is_canceled~.,
-                  data = hotel_sub,
-                  family = binomial(link = "logit"), 
-                  prior = hs_prior, 
-                  chains = 4, iter = 500*2, 
-                  seed = 123,
-                  control = list(adapt_delta = 0.999,
-                                 stepsize = 0.001,
-                                 max_treedepth = 25),
-                  refresh = 0)
-
-saveRDS(log_hs_model,file = "log_hs_model")
+logistic_model_1 <- stan_glm(
+  is_canceled ~. , data = hotel_sub,
+  family = binomial,
+  prior = hs_prior,
+  chains = 4, iter = 500*2, seed = 123, refresh = 0)
 ```
 
 ```{r}
-pp_check(log_hs_model)
-
-mcmc_trace(log_hs_model,
-           pars = vars(starts_with("country")))
-
-mcmc_trace(log_hs_model,
-           pars = vars(starts_with("arrival_date_year")))
-
-mcmc_trace(log_hs_model,
-           pars = vars(starts_with("arrival_date_month")))
-
-mcmc_trace(log_hs_model,
-           pars = vars(starts_with("arrival_date_week")))
-
-mcmc_trace(log_hs_model,
-           pars = vars(starts_with("is_repeated_guest"),
-                           starts_with("previous_cancellations"),
-                           starts_with("distribution_channel"),
-                           starts_with("market_segment"),
-                           starts_with("meal")))
-
-mcmc_trace(log_hs_model,
-           pars = vars(starts_with("reserved_room_type"),
-                           starts_with("assigned_room_type"),
-                           starts_with("deposit_type"),
-                           starts_with("customer_type")))
-
-mcmc_trace(log_hs_model,
-           pars = vars(lead_time,
-                           stays_in_weekend_nights,
-                           stays_in_week_nights,
-                           adults,
-                           children,
-                           babies,
-                           previous_bookings_not_canceled,
-                           booking_changes,
-                           adr,
-                           required_car_parking_spaces,
-                           total_of_special_requests))
+set.seed(123)
+post2 <- stan_glm(is_canceled~.,
+                  data = hotel_sub,
+                 family = binomial(link = "logit"), 
+                 prior = hs_prior, 
+                 chains = 3, iter = 500*2, 
+                 seed = 123,
+                 control = list(adapt_delta = 0.999, stepsize = 0.001,max_treedepth = 25),
+                 refresh = 0)
 ```
 
 
@@ -299,4 +259,130 @@ mcmc_intervals(bayes_lasso_log,
                            required_car_parking_spaces,
                            total_of_special_requests))
 ```
+```
+
+```{r}
+# library(brms)
+# library(tidyr)
+# library(dplyr)
+# library(ggplot2)
+# library(bayesplot)
+# 
+# # Binomial example
+# split_structure <- break_up_matrix_term(y ~ x, data = hotel_sub)
+# df_binom <- split_structure$data
+# formula <- split_structure$formula
+# d <- hotel_sub
+# n <- nrow(hotel_sub) # 100
+# D <- ncol(hotel_sub[, -1]) # 20
+# p0 <- 5 # prior guess for the number of relevant variables
+# tau0 <- p0/(D-p0) * 1/sqrt(n) # scale for tau 
+# 
+# priorh <- set_prior("horseshoe(scale_global = tau0, scale_slab=1)", class="b")
+# fit2 <- brm(formula, data=hotel_sub, family=bernoulli(), iter=500,  chains=2, prior =  priorh,  
+#                   sample_prior = T, control=list(adapt_delta=0.999,max_treedepth = 15), save_all_pars = TRUE, refresh=0)
+# vs2 <- cv_varsel(fit2)
+# plot(vs2, stats = c('elpd', 'rmse'))
+# proj2 <- project(vs2, nterms = 3, ns = 500)
+# mcmc_areas(as.matrix(proj2)) +  coord_cartesian(xlim = c(-2, 2))
+# 
+
+```
+
+
+> Piironen and Vehtari (2017), which recommends setting the global_scale argument equal to the ratio of the expected number of non-zero coefficients to the expected number of zero coefficients, divided by the square root of the number of observations.
+
+> warning message:Warning: There were 6 divergent transitions after warmup. See
+http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+to find out why this is a problem and how to eliminate them.
+Warning: Examine the pairs() plot to diagnose sampling problems
+
+```{r}
+# library(dplyr)
+# set.seed(123)
+# p0 <- 10
+# tau0 <- p0/(26-p0) * 1/sqrt(1000)
+# hs_prior <- hs(df=1, global_df=1, global_scale=tau0)
+# logistic_model_1 <- stan_glm(
+#   is_canceled ~. , data = hotel_sub,
+#   family = binomial,
+#   prior = hs_prior,
+#   chains = 4, iter = 500*2, seed = 123, refresh = 0)
+```
+
+```{r}
+head(hotel_sub)
+```
+is_canceled~hotel+lead_time+arrival_date_year+arrival_date_month+arrival_date_week_number+stays_in_weekend_nights+stays_in_week_nights+adults+children+babies+meal+country+market_segment+distribution_channel+is_repeated_guest+previous_cancellations+previous_bookings_not_canceled+reserved_room_type+assigned_room_type+booking_changes+deposit_type+customer_type+adr+required_car_parking_spaces+total_of_special_requests
+```{r}
+p0 <- 8
+tau0 <- p0/(26-p0) * 1/sqrt(1000)
+hs_prior <- hs(df=1, global_df=1, global_scale=tau0)
+t_prior <- student_t(df = 26, location = 0, scale = 2.5)
+```
+
+
+
+```{r}
+set.seed(123)
+post2 <- stan_glm(is_canceled~hotel+lead_time+arrival_date_year+arrival_date_month+arrival_date_week_number+stays_in_weekend_nights+stays_in_week_nights+adults+children+babies+meal+country+market_segment+distribution_channel+is_repeated_guest+previous_cancellations+previous_bookings_not_canceled+reserved_room_type+assigned_room_type+booking_changes+deposit_type+customer_type+adr+required_car_parking_spaces+total_of_special_requests,
+                  data = hotel_sub,
+                 family = binomial(link = "logit"), 
+                 prior = hs_prior, 
+                 chains = 2, iter = 500*2, 
+                 seed = 123,adapt_delta = 0.9999)
+```
+
+is_canceled~hotel+lead_time+arrival_date_year+arrival_date_month+arrival_date_week_number+stays_in_weekend_nights+stays_in_week_nights+adults+children+babies+meal+country+market_segment+distribution_channel+is_repeated_guest+previous_cancellations+previous_bookings_not_canceled+reserved_room_type+assigned_room_type+booking_changes+deposit_type+customer_type+adr+required_car_parking_spaces+total_of_special_requests
+```{r fig.width=8,fig.height=8}
+pplot <- plot(post2, "areas", prob = 0.95, prob_outer = 1)
+# pplot + geom_vline(xintercept = 0)+
+#   xlim(-50,50)
+mcmc_areas(post2,
+           pars = vars(lead_time,starts_with("country")))
+
+mcmc_intervals(post2,
+               pars = vars(lead_time,starts_with("country")))
+```
+
+```{r}
+library(tidyverse)
+library(caret)
+library(GGally)
+library(ggplot2)
+library(corrplot)
+library(bayesplot)
+theme_set(bayesplot::theme_default(base_family = "sans"))
+library(rstanarm)
+options(mc.cores = parallel::detectCores())
+library(loo)
+library(projpred)
+```
+
+```{r}
+varsel2 <- cv_varsel(post2, method='forward', nloo = 1000)
+```
+
+```{r}
+head(hotel_sub)
+```
+
+```{r}
+round(coef(post2), 8)
+```
+
+```{r}
+round(posterior_interval(post2, prob = 0.9), 8)
+```
+
+```{r}
+library(loo)
+library(projpred)
+```
+
+```{r}
+# varsel2 <- cv_varsel(post2, method='forward', nloo = 1000)
+```
+
+
 
