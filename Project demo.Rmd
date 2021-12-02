@@ -214,7 +214,7 @@ log_hs_model <- stan_glm(is_canceled~.,
                                  max_treedepth = 25),
                   refresh = 0)
 
-saveRDS(log_hs_model, file = "log_hs_model.rds")
+saveRDS(log_hs_model,file = "log_hs_model")
 ```
 
 ```{r}
