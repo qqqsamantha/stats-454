@@ -198,7 +198,7 @@ tidy(bayes_lasso_log)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 # horseshoe prior
 p0 <- 20
 tau0 <- p0/(26-p0) * 1/sqrt(1000)
@@ -213,8 +213,10 @@ log_hs_model <- stan_glm(is_canceled~.,
                                  stepsize = 0.001,
                                  max_treedepth = 25),
                   refresh = 0)
-
-saveRDS(log_hs_model,file = "log_hs_model")
+```
+```{r}
+log_hs_model_test <- readRDS(here("models","log_hs_model.rds"))
+pp_check(log_hs_model_test)
 ```
 
 ```{r}
