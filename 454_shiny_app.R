@@ -19,7 +19,7 @@ log_hs_model_updated<-readRDS("/Users/Apple/Desktop/454_project/models/log_hs_mo
 
 #R Shiny ui
 ui<-fluidPage(
-  titlePanel("Hotel Cancellation Exployer"),
+  titlePanel("Hotel Cancellation Explorer"),
   sidebarLayout(position = "left",
                 sidebarPanel("sidebar panel",
                              selectInput(inputId = "userchoice1", 
