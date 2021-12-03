@@ -20,6 +20,7 @@ library(bayesrules)
 library(broom.mixed)
 library(pracma)
 library(probably)
+library(here)
 hotel <- read.csv("https://raw.githubusercontent.com/yiyangshi-hub/STAT454-Project/main/hotel_bookings.csv")
 ```
 
