@@ -267,11 +267,25 @@ bayes_lasso_log_updated <-
          prior = lasso(df = 10, location = 0, scale = 2.5,autoscale = TRUE),
          prior_intercept = normal(location = 0, scale = 10),
          prior_aux = exponential(rate = 1, autoscale = TRUE),
+         prior_PD = FALSE,
          data = hotel_lasso)
 
 saveRDS(bayes_lasso_log_updated,
         file=here("models","bayes_lasso_log_updated.rds"))
 ```
+
+```{r}
+tidy(bayes_lasso_log_updated, 
+     effects = c("fixed", "aux"),
+     conf.int = TRUE, 
+     conf.level = 0.8)
+
+set.seed(112)
+prediction_summary_cv(model = bayes_lasso_log_updated, 
+                      data = hotel_lasso, 
+                      k = 10)
+```
+
 
 ```{r}
 # MCMC diagnostic
@@ -382,7 +396,7 @@ mcmc_intervals(log_hs_model,
 
 ```{r}
 hotel_hs <- hotel_clean %>% 
-  select(-reservation_status, -reservation_status_date,-company, -arrival_date_day_of_month, -days_in_waiting_list, -agent, -lead_time, -adults, -babies, -stays_in_weekend_nights, -stays_in_week_nights, -previous_bookings_not_canceled, -booking_changes, -adr, -reserved_room_type, meal)
+  select(-lead_time, -adults, -babies, -stays_in_weekend_nights, -stays_in_week_nights, -previous_bookings_not_canceled, -booking_changes, -adr, -reserved_room_type, meal)
 
 set.seed(123)
 hotel_hs <- hotel_hs %>% sample_n(1000)
@@ -391,7 +405,8 @@ hotel_hs <- hotel_hs %>% sample_n(1000)
 log_hs_model_updated <- stan_glm(is_canceled~.,
                   data = hotel_hs,
                   family = binomial(link = "logit"), 
-                  prior = hs_prior, 
+                  prior = hs_prior,
+                  prior_PD = FALSE,
                   chains = 4, 
                   iter = 500*2, 
                   seed = 123,
@@ -448,7 +463,7 @@ pp_check(log_hs_model)
 ```
 
 ```{r}
-set.seed(123)
+set.seed(454)
 classification_summary_cv(
  model = log_hs_model_updated, data = hotel_hs,
  cutoff = 0.5,
