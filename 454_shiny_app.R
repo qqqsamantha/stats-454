@@ -15,8 +15,8 @@ library(pracma)
 library(probably)
 library(DT)
 
-log_hs_model_updated<-readRDS("/Users/Apple/Desktop/454_project/models/log_hs_model_updated.rds")
-
+#log_hs_model_updated<-readRDS("/Users/Apple/Desktop/454_project/log_hs_model_updated.rds")
+log_hs_model_updated<-readRDS("log_hs_model_updated.rds")
 #R Shiny ui
 ui<-fluidPage(
   titlePanel("Hotel Cancellation Explorer"),
