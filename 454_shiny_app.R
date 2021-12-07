@@ -16,7 +16,11 @@ library(probably)
 library(DT)
 
 #log_hs_model_updated<-readRDS("/Users/Apple/Desktop/454_project/log_hs_model_updated.rds")
+log_model<-readRDS("log_model.rds")
+log_hs_model<-readRDS("log_hs_model.rds")
 log_hs_model_updated<-readRDS("log_hs_model_updated.rds")
+bayes_lasso_log_updated<-readRDS("bayes_lasso_log_updated.rds")
+
 #R Shiny ui
 ui<-fluidPage(
   titlePanel("Hotel Cancellation Explorer"),
@@ -121,10 +125,10 @@ ui<-fluidPage(
                                          max = 5,
                                          value = 1),
                              submitButton(text = "Get Predictions")),
-                mainPanel("main panel",plotOutput("histgram"))))
+                mainPanel("main panel",plotOutput("hs_histgram"),plotOutput("lasso_log_histgram"))))
 
 server <- function(input, output){
-  output$histgram <- renderPlot({
+  output$hs_histgram <- renderPlot({
     cancel_prediction<-posterior_predict(
       log_hs_model_updated,newdata=data.frame(hotel=input$userchoice1,
                                               arrival_date_year=input$userchoice3,
@@ -141,7 +145,26 @@ server <- function(input, output){
                                               customer_type=input$userchoice15,
                                               required_car_parking_spaces=input$userchoice16,
                                               total_of_special_requests=input$userchoice17))
-    mcmc_hist(cancel_prediction, prob = 0.9)})}
+    mcmc_hist(cancel_prediction, prob = 0.9)})
+  output$lasso_log_histgram <- renderPlot({
+    cancel_prediction<-posterior_predict(
+      log_hs_model_updated,newdata=data.frame(hotel=input$userchoice1,
+                                              arrival_date_year=input$userchoice3,
+                                              arrival_date_month=input$userchoice4,
+                                              arrival_date_week_number=input$userchoice5,
+                                              adults=input$userchoice6,children=input$userchoice7,
+                                              babies=input$userchoice8,
+                                              country=input$userchoice2,market_segment=input$userchoice9,
+                                              distribution_channel=input$userchoice10,
+                                              is_repeated_guest=input$userchoice11,
+                                              previous_cancellations=input$userchoice12,
+                                              assigned_room_type=input$userchoice13,
+                                              deposit_type=input$userchoice14,
+                                              customer_type=input$userchoice15,
+                                              required_car_parking_spaces=input$userchoice16,
+                                              total_of_special_requests=input$userchoice17))
+    mcmc_hist(cancel_prediction, prob = 0.9)})
+  }
 
 
 
