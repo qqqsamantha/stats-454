@@ -21,6 +21,7 @@ library(broom.mixed)
 library(pracma)
 library(probably)
 library(here)
+library(DT)
 hotel <- read.csv("https://raw.githubusercontent.com/yiyangshi-hub/STAT454-Project/main/hotel_bookings.csv")
 ```
 ## Introduction
@@ -39,11 +40,6 @@ codebook <- data.frame(variable = names(hotel),description = description)
 
 ```{r}
 datatable(codebook)
-```
-
-### Data summaries
-```{r}
-head(hotel_sub)
 ```
 
 ### Data Clean up
@@ -154,7 +150,7 @@ Y_i | \beta_0, \beta_1,...,\beta_{26}, \sigma & \stackrel{ind}{\sim} \text{Bern}
 
 - The priors on $(\beta_0, \beta_1, ... \beta_{26})$ are independent of one another.
 
-- $beta_1,beta_2..,beta_{26}$ represent the coefficient of predictors $X_{1},X_{2}...X_{26}$ and we also assume that each of the variable follow a normal distribution.
+- $\beta_1,\beta_2..,\beta_{26}$ represent the coefficient of predictors $X_{1},X_{2}...X_{26}$ and we also assume that each of the variable follow a normal distribution.
 
 - For interpretability, we state our prior understanding of the model intercept $\beta_0$ through the **centered intercept** $\beta_{0c}$.
 
@@ -164,8 +160,47 @@ Y_i | \beta_0, \beta_1,...,\beta_{26}, \sigma & \stackrel{ind}{\sim} \text{Bern}
 $$\beta_1 = \log(\text{odds}_{x_1+1}) - \log(\text{odds}_{x_1}) \;\; \text{ and } \;\; e^{\beta_1} = \frac{\text{odds}_{x_1+1}}{\text{odds}_{x_1}}$$
 - Same formula will apply to the remaining predictors $\beta_2, ..., \beta_{26}$
 
+### Bayesian Lasso Logistic Regression Model
 
-### Bayesian Lasso logistic prior and horseshoe prior
+$$\begin{array}{rll}
+Y_i | \beta_0, \beta_1,...,\beta_{26}, \sigma & \stackrel{ind}{\sim} \text{Bern}(\pi_i)\\
+\beta_{k} & \sim \text{Laplace}(0, 1/\lambda) & \\
+\end{array}$$
+
+**NOTES:**
+
+- The priors on $\beta_k$ are independent of one another. We set a laplace prior because the laplace distribution centered at 0, meaning if the coefficient shrink to 0, the corresponding variable will not be considered as one of the predictors in the model. 
+
+- $\beta_k$ represent the coefficient of predictors $X_{1},X_{2}...X_{26}$ and we also assume that each of the variable follow a laplace distribution.
+
+### Horseshoe Prior
+
+$$\begin{array}{rll}
+Y_i | \beta_0, \beta_1,...,\beta_{26}, \sigma & \stackrel{ind}{\sim} \text{Bern}(\pi_i)\\
+\beta_{k}|\tau,\lambda & \sim \text{N}(0, \tau\lambda_k) & \\
+\lambda_k & \sim \text{HalfCauchy}(0,1)\\
+\tau & \sim \text{HalfCauchy}(0,\tau_0)
+\end{array}$$
+
+
+**NOTES:**
+-  The prior on $\beta_k$ is a model which under the condition of $\lambda_k$ and $\tau$
+
+- The heavy-tailed Cauchy prior on $\lambda_k$ allows individual coefficients to offset and global shrinkage. $\tau$ shares the similar heavy-tailed cauchy prior with $\lambda_k$, but we need to choose $\tau_0$ to determinate how fast the model shrink to 0. 
+
+### Bayesian Logistic Prior
+```{r}
+log_model <- stan_glm(
+  is_canceled ~ ., data = hotel_sub,
+  family = binomial,
+  chains = 4, iter = 500*2, seed = 123, refresh = 0)
+
+saveRDS(log_model,
+        file=here("models","log_model.rds"))
+```
+
+
+### Bayesian Lasso logistic prior
 ```{r}
 set.seed(123)
 #bayesian lasso logistic prior
@@ -178,9 +213,105 @@ bayes_lasso_log <-
          data = hotel_sub)
 
 tidy(bayes_lasso_log)
-
 ```
 
+```{r}
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("country")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("arrival_date_year")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("arrival_date_month")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("arrival_date_week")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("is_repeated_guest"),
+                           starts_with("previous_cancellations"),
+                           starts_with("distribution_channel"),
+                           starts_with("market_segment"),
+                           starts_with("meal")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(starts_with("reserved_room_type"),
+                           starts_with("assigned_room_type"),
+                           starts_with("deposit_type"),
+                           starts_with("customer_type")))
+
+mcmc_intervals(bayes_lasso_log,
+               pars = vars(lead_time,
+                           stays_in_weekend_nights,
+                           stays_in_week_nights,
+                           adults,
+                           children,
+                           babies,
+                           previous_bookings_not_canceled,
+                           booking_changes,
+                           adr,
+                           required_car_parking_spaces,
+                           total_of_special_requests))
+```
+
+```{r,eval=FALSE}
+hotel_lasso <- hotel_sub %>% 
+  select(-meal, -lead_time, -stays_in_weekend_nights, -stays_in_week_nights, -adults, -previous_bookings_not_canceled, -booking_changes, -adr)
+
+
+set.seed(123)
+hotel_lasso <- hotel_lasso %>% sample_n(1000)
+
+
+bayes_lasso_log_updated <- 
+  stan_glm(is_canceled ~ .,
+         family = binomial(), 
+         prior = lasso(df = 10, location = 0, scale = 2.5,autoscale = TRUE),
+         prior_intercept = normal(location = 0, scale = 10),
+         prior_aux = exponential(rate = 1, autoscale = TRUE),
+         data = hotel_lasso)
+
+saveRDS(bayes_lasso_log_updated,
+        file=here("models","bayes_lasso_log_updated.rds"))
+```
+
+```{r}
+# MCMC diagnostic
+mcmc_trace(bayes_lasso_log_updated,
+           pars = vars(starts_with("country")))
+
+mcmc_trace(bayes_lasso_log_updated,
+           pars = vars(starts_with("arrival_date_year")))
+
+mcmc_trace(bayes_lasso_log_updated,
+           pars = vars(starts_with("arrival_date_month")))
+
+mcmc_trace(bayes_lasso_log_updated,
+           pars = vars(starts_with("arrival_date_week")))
+
+mcmc_trace(bayes_lasso_log_updated,
+           pars = vars(starts_with("is_repeated_guest"),
+                           starts_with("previous_cancellations"),
+                           starts_with("distribution_channel"),
+                           starts_with("market_segment"),
+                           starts_with("meal")))
+
+mcmc_trace(bayes_lasso_log_updated,
+               pars = vars(starts_with("reserved_room_type"),
+                           starts_with("assigned_room_type"),
+                           starts_with("deposit_type"),
+                           starts_with("customer_type")))
+
+mcmc_trace(bayes_lasso_log_updated,
+               pars = vars(children,
+                           babies,
+                           required_car_parking_spaces,
+                           total_of_special_requests))
+```
+
+
+### Horseshoe prior
 ```{r, eval=FALSE}
 
 # horseshoe prior
@@ -252,45 +383,6 @@ mcmc_intervals(log_hs_model,
 
 > With the mcmc_interval above, we can eliminate the variables whose interval shrinks to zero, meaning they don't have plenty of contribution on predicting the hotel cancellation. We will eliminate the variables: lead_time, adults, babies, stays_in_weekend_nights, stays_in_week_nights, previous_bookings_not_canceled, booking_changes, adr, reserved_room_type, meal
 
-```{r,eval=FALSE}
-hotel_hs <- hotel %>% 
-  select(-lead_time,-adults, -babies, -stays_in_weekend_nights,-stays_in_week_nights,-previous_bookings_not_canceled,-booking_changes,-adr,-reserved_room_type,-meal,-reservation_status, -reservation_status_date,-company, -arrival_date_day_of_month, -days_in_waiting_list, -agent) %>% 
-  filter(country %in%
-           c("AUT","BEL","BRA","CHE","CHN","CN","DEU","ESP","FRA","GBR","IRL",
-             "ISR","ITA","NLD","NOR","POL","PRT","RUS","SWE","USA")) %>% 
-  mutate(is_canceled = factor(is_canceled),
-         hotel = factor(hotel),
-         arrival_date_year = factor(arrival_date_year),
-         arrival_date_month = factor(arrival_date_month),
-         arrival_date_week_number = factor(arrival_date_week_number),
-         country = factor(country),
-         market_segment = factor(market_segment),
-         distribution_channel = factor(distribution_channel),
-         assigned_room_type = factor(assigned_room_type),
-         deposit_type = factor(deposit_type),
-         customer_type = factor(customer_type)
-         ) %>% 
-  na.omit()
-
-set.seed(123)
-hotel_hs <- hotel_hs %>% sample_n(1000)
-
-
-log_hs_model_updated <- 
-  stan_glm(is_canceled~.,
-           data = hotel_hs,
-           family = binomial(link = "logit"), 
-           prior = hs_prior, 
-           chains = 4, iter = 500*2, 
-           seed = 123,
-           control = list(adapt_delta = 0.999,
-                          stepsize = 0.001,
-                          max_treedepth = 25),
-                          refresh = 0)
-
-saveRDS(log_hs_model_updated,file=here("models","log_hs_model_updated.rds"))
-```
-
 ```{r}
 log_hs_model_updated <- readRDS(here("models","log_hs_model_updated.rds"))
 ```
@@ -327,6 +419,7 @@ mcmc_trace(log_hs_model_updated,
                            required_car_parking_spaces,
                            total_of_special_requests))
 ```
+
 ```{r}
 pp_check(log_hs_model_updated)
 pp_check(log_hs_model)
