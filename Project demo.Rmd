@@ -67,10 +67,8 @@ hotel_clean <- hotel %>%
          ) %>% 
   na.omit()
 
-
-# random sample 1000 rows from the big dataframe 'hotel'
 set.seed(123)
-hotel_sub <- sample_n(hotel_clean, 1000)
+hotel_sub <- hotel_clean %>% sample_n(1000)
 ```
 
 ```{r}
@@ -84,11 +82,11 @@ hotel_sub%>%
 > First, we construct a plot for the type of hotel vs is_canceled.
 
 ```{r}
-hotel_clean %>% 
+hotel_sub %>% 
   ggplot(aes(x = hotel)) +
   geom_bar()
 
-hotel_clean %>% 
+hotel_sub %>% 
   ggplot(aes(x = hotel, fill = is_canceled)) +
   geom_bar(position = "fill")
 ```
@@ -202,7 +200,6 @@ saveRDS(log_model,
 
 ### Bayesian Lasso logistic prior
 ```{r}
-set.seed(123)
 #bayesian lasso logistic prior
 bayes_lasso_log <- 
   stan_glm(is_canceled ~ .,
@@ -256,7 +253,7 @@ mcmc_intervals(bayes_lasso_log,
 ```
 
 ```{r,eval=FALSE}
-hotel_lasso <- hotel_sub %>% 
+hotel_lasso <- hotel_clean %>% 
   select(-meal, -lead_time, -stays_in_weekend_nights, -stays_in_week_nights, -adults, -previous_bookings_not_canceled, -booking_changes, -adr)
 
 
@@ -382,6 +379,31 @@ mcmc_intervals(log_hs_model,
 ```
 
 > With the mcmc_interval above, we can eliminate the variables whose interval shrinks to zero, meaning they don't have plenty of contribution on predicting the hotel cancellation. We will eliminate the variables: lead_time, adults, babies, stays_in_weekend_nights, stays_in_week_nights, previous_bookings_not_canceled, booking_changes, adr, reserved_room_type, meal
+
+```{r}
+hotel_hs <- hotel_clean %>% 
+  select(-reservation_status, -reservation_status_date,-company, -arrival_date_day_of_month, -days_in_waiting_list, -agent, -lead_time, -adults, -babies, -stays_in_weekend_nights, -stays_in_week_nights, -previous_bookings_not_canceled, -booking_changes, -adr, -reserved_room_type, meal)
+
+set.seed(123)
+hotel_hs <- hotel_hs %>% sample_n(1000)
+
+
+log_hs_model_updated <- stan_glm(is_canceled~.,
+                  data = hotel_hs,
+                  family = binomial(link = "logit"), 
+                  prior = hs_prior, 
+                  chains = 4, 
+                  iter = 500*2, 
+                  seed = 123,
+                  control = list(adapt_delta = 0.999,
+                                 stepsize = 0.001,
+                                 max_treedepth = 25),
+                  refresh = 0)
+
+saveRDS(log_hs_model_updated,
+        file=here("models","log_hs_model_updated.rds"))
+```
+
 
 ```{r}
 log_hs_model_updated <- readRDS(here("models","log_hs_model_updated.rds"))
