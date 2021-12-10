@@ -88,7 +88,9 @@ hotel_sub %>%
 
 hotel_sub %>% 
   ggplot(aes(x = hotel, fill = is_canceled)) +
-  geom_bar(position = "fill")
+  geom_bar() +
+  scale_fill_brewer(palette="greens")
+  
 ```
 
 > Then we see that in general, there are more city hotel than resort hotel in our dataset. However, when looking at the hotels that have been canceled, it is more likely for the City Hotel to be canceled than Resort Hotel. 
@@ -469,6 +471,6 @@ set.seed(454)
 classification_summary_cv(
  model = log_hs_model_updated, data = hotel_hs,
  cutoff = 0.5,
- k = 10)
+ k = 5)
 ```
 

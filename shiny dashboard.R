@@ -87,17 +87,26 @@ body <- dashboardBody(
   tabItems(
     tabItem(tabName ="Background",
             fluidRow(
-              column( width = 5,
                 box(
                   title = "About the Data", status = "primary", solidHeader = TRUE,
                   "This data set contains booking information for a city hotel and a resort hotel, and includes information such as when the booking was made, length of stay, the number of adults, children, and/or babies, and the number of available parking spaces, among other things."
                 ),
                 box(
+                  title = "Author", solidHeader = TRUE, background = "light-blue",
                   "Who creates the data:The data is originally from the article Hotel Booking Demand Datasets, written by Nuno Antonio, Ana Almeida, and Luis Nunes for Data in Brief, Volume 22, February 2019."
                 ),
                 box(
-                  "Data source:The data was downloaded and cleaned by Thomas Mock and Antoine Bichat for #TidyTuesday during the week of February 11th, 2020.source: https://www.kaggle.com/jessemostipak/hotel-booking-demand"
-                )
+                  title = "Data source", solidHeader = TRUE, background = "yellow",
+                  "The data was downloaded and cleaned by Thomas Mock and Antoine Bichat for #TidyTuesday during the week of February 11th, 2020.source: https://www.kaggle.com/jessemostipak/hotel-booking-demand"
+                ),
+                box(
+                  plotOutput("plot1")
+                ),
+                box(
+                  plotOutput("plot2")
+                ),
+                box(
+                  plotOutput("plot3")
               )
               
             )),
@@ -149,17 +158,6 @@ body <- dashboardBody(
               )
             )
     ),
-    tabItem(tabName = "Data_Visualization",
-            fluidRow(
-              box(
-                plotOutput("plot1", height = 250)
-              ),
-              box(
-                plotOutput("plot2", height = 250)
-              ),
-              box(
-                plotOutput("plot3", height = 250))
-            )),
     tabItem(tabName = "Bayes_Logistic_Lasso",
             fluidRow(
               box(
@@ -397,7 +395,18 @@ body <- dashboardBody(
                 submitButton(text = "Get Predictions")
               )
             )
-    )
+    ),
+    tabItem(tabName = "Model_Evaluation",
+            fluidRow(
+              column( width = 12,
+                box(
+                  plotOutput("plot4")
+                ),
+                box(
+                  plotOutput("plot5")
+                )
+              )
+            ))
   )
 )
 
@@ -461,18 +470,28 @@ server <- function(input, output) {
   output$plot1 <- renderPlot({
     hotel_sub %>% 
       ggplot(aes(x = hotel, fill = is_canceled)) +
-      geom_bar(position = "fill")
+      geom_bar()+
+      scale_fill_brewer(palette="greens")
   })
   
   output$plot2 <- renderPlot({
     hotel_sub %>% 
       ggplot(aes(x = previous_cancellations, fill = is_canceled)) +
-      geom_bar(position = "fill")
+      geom_bar()+
+      scale_fill_brewer(palette="greens")
   })
   
   output$plot3 <- renderPlot({
     ggplot(hotel_sub, aes(x = hotel, y = is_canceled, color = previous_cancellations)) +
       geom_jitter(height = 0.25)
+  })
+  
+  output$plot4 <- renderPlot({
+    pp_check(log_hs_model_updated)
+  })
+  
+  output$plot5 <- renderPlot({
+    pp_check(bayes_lasso_log_updated)
   })
 }
 
