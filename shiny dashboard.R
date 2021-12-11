@@ -58,17 +58,8 @@ sidebar <- dashboardSidebar(
     menuItem("Background",
              tabName = "Background",
              icon = icon("th")),
-    menuItem("Bayesian_Logistic_Notation",
-             tabName = "Bayesian_Logistic_Notation",
-             icon = icon("th")),
-    menuItem("Bayesian_Logistic_Lasso_Notation",
-             tabName = "Bayesian_Logistic_Lasso_Notation",
-             icon = icon("th")),
-    menuItem("Horseshoe_Notation",
-             tabName = "Horseshoe_Notation",
-             icon = icon("th")),
-    menuItem("Data_Visualization",
-             tabName = "Data_Visualization",
+    menuItem("Model_Notation",
+             tabName = "Model_Notation",
              icon = icon("th")),
     menuItem("Bayes_Logistic_Lasso", 
              tabName = "Bayes_Logistic_Lasso", 
@@ -87,18 +78,23 @@ body <- dashboardBody(
   tabItems(
     tabItem(tabName ="Background",
             fluidRow(
+              column(
+                width = 8,
                 box(
                   title = "About the Data", status = "primary", solidHeader = TRUE,
-                  "This data set contains booking information for a city hotel and a resort hotel, and includes information such as when the booking was made, length of stay, the number of adults, children, and/or babies, and the number of available parking spaces, among other things."
-                ),
-                box(
-                  title = "Author", solidHeader = TRUE, background = "light-blue",
-                  "Who creates the data:The data is originally from the article Hotel Booking Demand Datasets, written by Nuno Antonio, Ana Almeida, and Luis Nunes for Data in Brief, Volume 22, February 2019."
-                ),
-                box(
-                  title = "Data source", solidHeader = TRUE, background = "yellow",
-                  "The data was downloaded and cleaned by Thomas Mock and Antoine Bichat for #TidyTuesday during the week of February 11th, 2020.source: https://www.kaggle.com/jessemostipak/hotel-booking-demand"
-                ),
+                  p("This data set contains booking information for a city hotel and a resort hotel, 
+                    and includes information such as when the booking was made, length of stay, 
+                    the number of adults, children, and/or babies, and the number of available parking spaces, 
+                    among other things."),
+                  p("The data is originally from the article Hotel Booking Demand Datasets, 
+                    written by Nuno Antonio, Ana Almeida, and Luis Nunes for Data in Brief, Volume 22, February 2019."),
+                  p("The data was downloaded and cleaned by Thomas Mock and Antoine Bichat for 
+                    #TidyTuesday during the week of February 11th, 2020.source: 
+                    https://www.kaggle.com/jessemostipak/hotel-booking-demand")
+                  )
+              ),
+              column(
+                width = 6,
                 box(
                   plotOutput("plot1")
                 ),
@@ -107,56 +103,73 @@ body <- dashboardBody(
                 ),
                 box(
                   plotOutput("plot3")
+                )
               )
               
             )),
-    tabItem(tabName = "Bayesian_Logistic_Notation",
-            fluidRow(
-              box(
-                withMathJax(helpText("To model the binary response variable $$Y\\in \\{0,1\\}$$ by predictors $$X_1,X_2...X_{26}$$, suppose we collect n data points. Let $$(Y_i, X_i)$$ denotes the observed data on each case $$i\\in \\{1, 2, ..., n\\}$$. Thus the Bayesian Logistic Regression model is as follows:")),
-                withMathJax(helpText("$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)  \\text{where } \\log\\left(\\frac{\\pi_i}{1 - \\pi_i}\\right) = \\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 +...+\\beta_{26} X_{26}$$")),
-                withMathJax(helpText("$$\\text{equivalently, } \\frac{\\pi_i}{1 - \\pi_i} = e^{\\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 +...+\\beta_{26} X_{26}}$$")),
-                withMathJax(helpText("$$\\text{ and } \\pi_i = \\frac{e^{\\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 +...+\\beta_{26} X_{26}}}{e^{\\beta_0 + \\beta_1 X_1 + \\beta_2 X_2 +...+\\beta_{26} X_{26}} + 1}$$")),
-                withMathJax(helpText("$$\\beta_{0c}  \\sim N(m_0, s_0^2)$$")),
-                withMathJax(helpText("$$\\beta_1    \\sim N(m_1, s_1^2)$$")),
-                withMathJax(helpText("$$\\beta_2   \\sim N(m_2, s_2^2)$$")),
-                withMathJax(helpText("$$\\text{ ... }$$")),
-                withMathJax(helpText("$$\\beta_{26}    \\sim N(m_{26}, s_{26}^2)$$"))
-              ),
-              box(
-                "Note:",
-                withMathJax(helpText("The priors on $$(\\beta_0, \\beta_1, ... \\beta_{26})$$ are independent of one another.")),
-                withMathJax(helpText("For interpretability, we state our prior understanding of the model intercept $$\\beta_0$$ through the **centered intercept** $$\\beta_{0c}$$.")),
-                withMathJax(helpText("When $$X = 0$$, $$\\beta_0$$ is the expected *logged* odds for the hotel booking is canceled and $$e^{\\beta_0}$$ is the expected *odds* for the hotel booking is canceled")),
-                withMathJax(helpText("For each 1-unit increase in $$X_1$$, $$\\beta_1$$ is the expected change in the *logged odds of the hotel booking is canceled* and $$e^{\\beta_1}$$ is the expected *multiplicative* change in *odds*.")),
-                withMathJax(helpText("$$\\beta_1 = \\log(\\text{odds}_{x_1+1}) - \\log(\\text{odds}_{x_1}) \\;\\; \\text{ and } \\;\\; e^{\\beta_1} = \\frac{\\text{odds}_{x_1+1}}{\\text{odds}_{x_1}}$$")),
-                withMathJax(helpText("Same formula will apply to the remaining predictors $$\\beta_2, ..., \\beta_{26}$$"))
-              )
-            )
-    ),
     
-    tabItem(tabName = "Bayesian_Logistic_Lasso_Notation",
-            fluidRow(
-              box(
-                withMathJax(helpText("$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma  \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)$$")),
-                withMathJax(helpText("$$\\beta_{k}  \\sim \\text{Laplace}(0, 1/\\lambda)$$")),
-                withMathJax(helpText("The priors on $$\\beta_k$$ are independent of one another. We set a laplace prior because the laplace distribution centered at 0, meaning if the coefficient shrink to 0, the corresponding variable will not be considered as one of the predictors in the model. ")),
-                withMathJax(helpText("$$\\beta_k$$ represent the coefficient of predictors $$X_{1},X_{2}...X_{26}$$ and we also assume that each of the variable follow a laplace distribution."))
-              )
-            )
-    ),
-    tabItem(tabName = "Horseshoe_Notation",
-            fluidRow(
-              box(
-                withMathJax(helpText("$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma  \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)$$")),
-                withMathJax(helpText("$$\\beta_{k}|\\tau,\\lambda  \\sim \\text{N}(0, \\tau\\lambda_k)$$")),
-                withMathJax(helpText("$$\\lambda_k  \\sim \\text{HalfCauchy}(0,1)$$")),
-                withMathJax(helpText("$$\\tau  \\sim \\text{HalfCauchy}(0,\\tau_0)$$")),
-                withMathJax(helpText("The prior on $$\\beta_k$$ is a model which under the condition of $$\\lambda_k$$ and $$\\tau$$")),
-                withMathJax(helpText("The heavy-tailed Cauchy prior on $$\\lambda_k$$ allows individual coefficients to offset and global shrinkage.")),
-                withMathJax(helpText("$$\\tau$$ shares the similar heavy-tailed cauchy prior with $$\\lambda_k$$, but we need to choose $$\\tau_0$$ to determinate how fast the model shrink to 0."))
-              )
-            )
+    tabItem(tabName = "Model_Notation",
+            fluidRow(column(width=2, icon("hand-point-right","fa-5x"),align="center"),
+                     column(
+                       br(),
+                       br(),
+                       box(title = "Bayesian Logistic", status = "primary", solidHeader = TRUE,
+                           withMathJax(),
+                         "$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)$$
+                         $$\\beta_{0c}\\sim N(m_0, s_0^2)$$
+                         $$\\beta_1\\sim N(m_1, s_1^2)$$
+                         $$\\beta_2\\sim N(m_2, s_2^2)$$
+                         $$\\text{ ... }$$
+                         $$\\beta_{26}\\sim N(m_{26}, s_{26}^2)$$"
+                       ),
+                       br(),
+                       p("The first row of the model notation above represents the model we choose for the 
+                         response variable Y, which is the hotel booking is canceled or not,
+                         For interpretability, we state our prior understanding of the model intercept 
+                         through the centered intercept. When x = 0, the intercept is the expected 
+                         logged odds for the hotel booking is canceled and the exponentiated intercept is the expected odds
+                         for the hotel booking is canceled. For each 1-unit increase in a predictor, its corresponding coefficient 
+                         represents the expected change in the logged odds of the hotel booking is canceled and 
+                         the exponentiated coefficient represents the expected multiplicative change in odds."),
+                       width=8,style="background-color:light-blue;border-radius: 10px")
+            ),
+            fluidRow(column(width=2, icon("hand-point-right","fa-5x"),align="center"),
+                     column(
+                       br(),
+                       br(),
+                       box(title = "Bayesian Lasso Logistic", status = "primary", solidHeader = TRUE,
+                       "$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma  \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)$$
+                          $$\\beta_{k}  \\sim \\text{Laplace}(0, 1/\\lambda)$$"),
+                       br(),
+                       p("The priors on the coefficients are independent of one another. 
+                         We set a laplace prior because the laplace distribution centered at 0, 
+                         meaning if the coefficient shrink to 0, 
+                         the corresponding variable will not be considered as one of the predictors in the model. 
+                         The second row of the model notation above represents the model we choose for each predictor's coefficient. 
+                         and we also assume that each of the variable follow a laplace distribution."),
+                       width=8,style="background-color:light-blue;border-radius: 10px")
+            ),
+            fluidRow(column(width=2, icon("hand-point-right","fa-5x"),align="center"),
+                     column(
+                       br(),
+                       br(),
+                       box(title = "Horseshoe", status = "primary", solidHeader = TRUE,
+                           "$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma  \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)$$
+                           $$\\beta_{k}|\\tau,\\lambda  \\sim \\text{N}(0, \\tau\\lambda_k)$$
+                           $$\\lambda_k  \\sim \\text{HalfCauchy}(0,1)$$
+                           $$\\tau  \\sim \\text{HalfCauchy}(0,\\tau_0)$$"),
+                       br(),
+                       p("The first row of the above model notation represents
+                         the Bernoulli distribution of the outcome variable Y, 
+                         since the hotel booking is either canceled or not canceled. 
+                         we also give the penalty term a heavy-tailed Cauchy prior,
+                         so it allows individual coefficients to shrink to zero 
+                         based on its contribution to the prediction accuracy 
+                         The second row above represents the distribution of each coefficient of each variable.
+                         Besides the penalty term, we also need to choose similar half Cauchy distribution
+                         for the variable on the fourth row, which determine how fast a variable shrink to zero"),
+                       width=8,style="background-color:light-blue;border-radius: 10px")
+            )          
     ),
     tabItem(tabName = "Bayes_Logistic_Lasso",
             fluidRow(
@@ -407,8 +420,8 @@ body <- dashboardBody(
                 )
               )
             ))
-  )
-)
+  ))
+
 
 ui <- dashboardPage(head, sidebar, body)
 server <- function(input, output) {
@@ -436,8 +449,12 @@ server <- function(input, output) {
       rename(y = `1`) %>%
       count(y) %>% 
       mutate(prop = n/sum(n)) %>% 
-      ggplot(aes(x = y, y = prop)) +
-      geom_col()
+      ggplot(aes(x = y, y = prop, fill = prop)) +
+      geom_col()+
+      theme(legend.position = "none")+
+      labs(title = "Probability of hotel Cancellation") +
+      xlab("Hotel canceled or not")+
+      ylab("Probability")
   })
   
   output$hs_histgram <- renderPlot({
@@ -463,27 +480,32 @@ server <- function(input, output) {
       rename(y = `1`) %>%
       count(y) %>% 
       mutate(prop = n/sum(n)) %>% 
-      ggplot(aes(x = y, y = prop)) +
-      geom_col()
+      ggplot(aes(x = y, y = prop, fill = prop)) +
+      geom_col() +
+      theme(legend.position = "none")+
+      labs(title = "Probability of hotel Cancellation") +
+      xlab("Hotel canceled or not")+
+      ylab("Probability")
   })
   
   output$plot1 <- renderPlot({
     hotel_sub %>% 
       ggplot(aes(x = hotel, fill = is_canceled)) +
       geom_bar()+
-      scale_fill_brewer(palette="greens")
+      scale_fill_manual(values = c("#FF6600", "#0066CC"))
   })
   
   output$plot2 <- renderPlot({
     hotel_sub %>% 
       ggplot(aes(x = previous_cancellations, fill = is_canceled)) +
       geom_bar()+
-      scale_fill_brewer(palette="greens")
+      scale_fill_manual(values = c("#FF6600", "#0066CC"))
   })
   
   output$plot3 <- renderPlot({
     ggplot(hotel_sub, aes(x = hotel, y = is_canceled, color = previous_cancellations)) +
-      geom_jitter(height = 0.25)
+      geom_jitter(height = 0.25) +
+      scale_color_manual(values = c("#FF6600", "#0066CC"))
   })
   
   output$plot4 <- renderPlot({

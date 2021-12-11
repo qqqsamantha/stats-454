@@ -89,7 +89,7 @@ hotel_sub %>%
 hotel_sub %>% 
   ggplot(aes(x = hotel, fill = is_canceled)) +
   geom_bar() +
-  scale_fill_brewer(palette="greens")
+  scale_fill_brewer(palette="Blues")
   
 ```
 
@@ -100,7 +100,8 @@ hotel_sub %>%
 ```{r}
 hotel_sub %>% 
   ggplot(aes(x = previous_cancellations, fill = is_canceled)) +
-  geom_bar(position = "fill")
+  geom_bar(position = "fill") +
+  scale_fill_brewer(palette="Blues")
 ```
 
 > From the graph above, we can see that those who did not cancel last time are also less likely to cancel this time than those who did cancel. 
@@ -110,7 +111,8 @@ hotel_sub %>%
 ```{r}
 hotel_sub %>% 
   ggplot(aes(x = hotel, fill = previous_cancellations)) +
-  geom_bar(position = "fill")
+  geom_bar(position = "fill")+
+  scale_fill_brewer(palette="Blues")
 ```
 
 > It is clear that for those who previously canceled, there are more City Hotel than Resort Hotel.
@@ -119,7 +121,8 @@ hotel_sub %>%
 
 ```{r}
 ggplot(hotel_sub, aes(x = hotel, y = is_canceled, color = previous_cancellations)) +
-  geom_jitter(height = 0.25)
+  geom_jitter(height = 0.25) +
+  scale_color_manual(values = c("steelblue","red"))
 ```
 
 > We can see a clear cluster that those which is a City Hotel and who has previously canceled the hotel would devote the most cases to the hotel cancellations. Hotel type and previous_cancellations are 2 strong predictors.
