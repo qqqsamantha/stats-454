@@ -70,8 +70,8 @@ sidebar <- dashboardSidebar(
     menuItem("Model_Evaluation", 
              tabName = "Model_Evaluation", 
              icon = icon("th"))
-    )
   )
+)
 
 
 body <- dashboardBody(
@@ -79,7 +79,7 @@ body <- dashboardBody(
     tabItem(tabName ="Background",
             fluidRow(
               column(
-                width = 8,
+                width = 12,
                 box(
                   title = "About the Data", status = "primary", solidHeader = TRUE,
                   p("This data set contains booking information for a city hotel and a resort hotel, 
@@ -91,20 +91,38 @@ body <- dashboardBody(
                   p("The data was downloaded and cleaned by Thomas Mock and Antoine Bichat for 
                     #TidyTuesday during the week of February 11th, 2020.source: 
                     https://www.kaggle.com/jessemostipak/hotel-booking-demand")
-                  )
-              ),
-              column(
-                width = 6,
-                box(
-                  plotOutput("plot1")
-                ),
-                box(
-                  plotOutput("plot2")
-                ),
-                box(
-                  plotOutput("plot3")
                 )
+              ),
+              box(
+                title = "Hotel type vs Cancellation", status = "primary", width = 4,
+                plotOutput("plot1"),
+                p("In general, there are more city hotel than resort hotel 
+                  in our dataset. However, when looking at the hotels that have been canceled, 
+                  it is more likely for the City Hotel to be canceled than Resort Hotel"),
+                p("Then we may wondering if this can be explained by the customers' own behavior, 
+                  eg. some customers are more likely to cancel the hotel than others. 
+                  Then we look at previous cancellations which may reflect the customers behaviors")
+              ),
+              box(
+                title = "Previous Cancellation vs Cancellation", status = "warning", width = 4,
+                plotOutput("plot2"),
+                p("From the graph above, we can see that those who did not cancel last time are also 
+                  less likely to cancel this time than those who did cancel. "),
+                p("It may be better to combine the previous two graphs into a jitter plot, so it contains
+                    all three parameters we have discussed.")
+              ),
+              box(
+                title = "Hotel Type vs Previous Cancellation vs Cancellation",
+                status = "success",
+                width = 4,
+                plotOutput("plot3"),
+                p("We can see a clear cluster that those which is a City Hotel and who has previously 
+                    canceled the hotel would devote the most cases to the hotel cancellations. 
+                    Hotel type and previous_cancellations are 2 strong predictors."),
+                p("So we may wondering what other predictors, like Hotel type and previous_cancellations, 
+                    can be used to model the hotel cancellations. Then we would dig deeper into model building.")
               )
+              
               
             )),
     
@@ -115,7 +133,7 @@ body <- dashboardBody(
                        br(),
                        box(title = "Bayesian Logistic", status = "primary", solidHeader = TRUE,
                            withMathJax(),
-                         "$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)$$
+                           "$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)$$
                          $$\\beta_{0c}\\sim N(m_0, s_0^2)$$
                          $$\\beta_1\\sim N(m_1, s_1^2)$$
                          $$\\beta_2\\sim N(m_2, s_2^2)$$
@@ -138,7 +156,7 @@ body <- dashboardBody(
                        br(),
                        br(),
                        box(title = "Bayesian Lasso Logistic", status = "primary", solidHeader = TRUE,
-                       "$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma  \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)$$
+                           "$$Y_i | \\beta_0, \\beta_1,...,\\beta_{26}, \\sigma  \\stackrel{ind}{\\sim} \\text{Bern}(\\pi_i)$$
                           $$\\beta_{k}  \\sim \\text{Laplace}(0, 1/\\lambda)$$"),
                        br(),
                        p("The priors on the coefficients are independent of one another. 
@@ -176,45 +194,45 @@ body <- dashboardBody(
               box(
                 width = 3,height = 2,
                 selectInput(inputId = "userchoice1", 
-                              label = "Input Hotel type Here", 
-                              choices = list("City Hotel","Resort Hotel"), 
-                              multiple = FALSE),
+                            label = "Input Hotel type Here", 
+                            choices = list("City Hotel","Resort Hotel"), 
+                            multiple = FALSE),
                 selectInput(inputId = "userchoice2", 
-                              "Input Country Here", 
-                              choices = list("PRT","ESP","GBR","NLD","AUT","FRA","BEL",
-                                             "BRA","USA","ITA","DEU","IRL","CN","POL",
-                                             "RUS","NOR","CHN","CHE","ISR","SWE"),
-                              selected=list("PRT"),
-                              multiple = FALSE), 
+                            "Input Country Here", 
+                            choices = list("PRT","ESP","GBR","NLD","AUT","FRA","BEL",
+                                           "BRA","USA","ITA","DEU","IRL","CN","POL",
+                                           "RUS","NOR","CHN","CHE","ISR","SWE"),
+                            selected=list("PRT"),
+                            multiple = FALSE), 
                 selectInput(inputId = "userchoice3", 
-                              label = "Input Year Here", 
-                              choices= list("2015","2016","2017"),
-                              selected=list("2016"),
-                              multiple = FALSE),
+                            label = "Input Year Here", 
+                            choices= list("2015","2016","2017"),
+                            selected=list("2016"),
+                            multiple = FALSE),
                 selectInput(inputId = "userchoice4", 
-                              label = "Input Month Here", 
-                              choices= list("January","February","March","April",
-                                            "May","June","July","August","September",
-                                            "October","November","December"),
-                              selected=list("January"),
-                              multiple = FALSE),
+                            label = "Input Month Here", 
+                            choices= list("January","February","March","April",
+                                          "May","June","July","August","September",
+                                          "October","November","December"),
+                            selected=list("January"),
+                            multiple = FALSE),
                 selectInput(inputId="userchoice5",
-                              label="arrival date week number",
-                              choices= list("1","2","3",
-                                            "4","5","6","7","8",
-                                            "9","10","11","12","13","14","15","16","17",
-                                            "18","19","20","21","22","23",
-                                            "24","25","26","27","28",
-                                            "29","30","31","32","33","34","35","36","37",
-                                            "38","39","40","41","42","43",
-                                            "44","45","46","47","48","49","50","51","52","53"),
-                              selected=list("1"),
-                              multiple = FALSE),
+                            label="arrival date week number",
+                            choices= list("1","2","3",
+                                          "4","5","6","7","8",
+                                          "9","10","11","12","13","14","15","16","17",
+                                          "18","19","20","21","22","23",
+                                          "24","25","26","27","28",
+                                          "29","30","31","32","33","34","35","36","37",
+                                          "38","39","40","41","42","43",
+                                          "44","45","46","47","48","49","50","51","52","53"),
+                            selected=list("1"),
+                            multiple = FALSE),
                 sliderInput(inputId="userchoice6",
-                              "number of adults",
-                              min = 0,
-                              max = 4,
-                              value = 2),
+                            "number of adults",
+                            min = 0,
+                            max = 4,
+                            value = 2),
                 sliderInput(inputId="userchoice7",
                             "number of children",
                             min = 0,
@@ -401,12 +419,12 @@ body <- dashboardBody(
     tabItem(tabName = "Model_Evaluation",
             fluidRow(
               column( width = 12,
-                box(
-                  plotOutput("plot4")
-                ),
-                box(
-                  plotOutput("plot5")
-                )
+                      box(
+                        plotOutput("plot4")
+                      ),
+                      box(
+                        plotOutput("plot5")
+                      )
               )
             ))
   ))
@@ -437,9 +455,11 @@ server <- function(input, output) {
       as.data.frame() %>% 
       rename(y = `1`) %>%
       count(y) %>% 
-      mutate(prop = n/sum(n)) %>% 
-      ggplot(aes(x = y, y = prop, fill = prop)) +
+      mutate(prop = n/sum(n),
+             y = factor(y)) %>% 
+      ggplot(aes(x = y, y = prop, fill = y)) +
       geom_col()+
+      scale_fill_manual(values = c("#FF651D","#3487D5"))+
       theme(legend.position = "none")+
       labs(title = "Probability of hotel Cancellation") +
       xlab("Hotel canceled or not")+
@@ -467,9 +487,11 @@ server <- function(input, output) {
       as.data.frame() %>% 
       rename(y = `1`) %>%
       count(y) %>% 
-      mutate(prop = n/sum(n)) %>% 
-      ggplot(aes(x = y, y = prop, fill = prop)) +
+      mutate(prop = n/sum(n),
+             y = factor(y)) %>% 
+      ggplot(aes(x = y, y = prop, fill = y)) +
       geom_col() +
+      scale_fill_manual(values = c("#FF651D","#3487D5"))+
       theme(legend.position = "none")+
       labs(title = "Probability of hotel Cancellation") +
       xlab("Hotel canceled or not")+
@@ -480,20 +502,20 @@ server <- function(input, output) {
     hotel_sub %>% 
       ggplot(aes(x = hotel, fill = is_canceled)) +
       geom_bar()+
-      scale_fill_manual(values = c("#FF6600", "#0066CC"))
+      scale_fill_manual(values = c("#FF651D","#3487D5"))
   })
   
   output$plot2 <- renderPlot({
     hotel_sub %>% 
       ggplot(aes(x = previous_cancellations, fill = is_canceled)) +
       geom_bar()+
-      scale_fill_manual(values = c("#FF6600", "#0066CC"))
+      scale_fill_manual(values = c("#FF651D","#3487D5"))
   })
   
   output$plot3 <- renderPlot({
     ggplot(hotel_sub, aes(x = hotel, y = is_canceled, color = previous_cancellations)) +
       geom_jitter(height = 0.25) +
-      scale_color_manual(values = c("#FF6600", "#0066CC"))
+      scale_color_manual(values = c("#FF651D","#3487D5"))
   })
   
   output$plot4 <- renderPlot({
