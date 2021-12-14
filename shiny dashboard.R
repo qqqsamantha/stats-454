@@ -58,16 +58,16 @@ sidebar <- dashboardSidebar(
     menuItem("Background",
              tabName = "Background",
              icon = icon("th")),
-    menuItem("Model_Notation",
+    menuItem("Model Notation",
              tabName = "Model_Notation",
              icon = icon("th")),
-    menuItem("Bayes_Logistic_Lasso", 
+    menuItem("Bayes Logistic Lasso", 
              tabName = "Bayes_Logistic_Lasso", 
              icon = icon("dashboard")),
     menuItem("Horseshoe", 
              tabName = "Horseshoe", 
              icon = icon("th")),
-    menuItem("Model_Evaluation", 
+    menuItem("Model Evaluation", 
              tabName = "Model_Evaluation", 
              icon = icon("th"))
   )
@@ -78,20 +78,31 @@ body <- dashboardBody(
   tabItems(
     tabItem(tabName ="Background",
             fluidRow(
-              column(
-                width = 12,
-                box(
-                  title = "About the Data", status = "primary", solidHeader = TRUE,
-                  p("This data set contains booking information for a city hotel and a resort hotel, 
+              box(
+                title = "About the Data", status = "primary", solidHeader = TRUE, width = 6,
+                p("This data set contains booking information for a city hotel and a resort hotel, 
                     and includes information such as when the booking was made, length of stay, 
                     the number of adults, children, and/or babies, and the number of available parking spaces, 
                     among other things."),
-                  p("The data is originally from the article Hotel Booking Demand Datasets, 
+                p("The data is originally from the article Hotel Booking Demand Datasets, 
                     written by Nuno Antonio, Ana Almeida, and Luis Nunes for Data in Brief, Volume 22, February 2019."),
-                  p("The data was downloaded and cleaned by Thomas Mock and Antoine Bichat for 
+                p("The data was downloaded and cleaned by Thomas Mock and Antoine Bichat for 
                     #TidyTuesday during the week of February 11th, 2020.source: 
                     https://www.kaggle.com/jessemostipak/hotel-booking-demand")
-                )
+              ),
+              tabBox(
+                title = "Motivation", width = 6, height = "250px",
+                tabPanel("Trend", 
+                         "There has been an overall growing trend for hotel cancellations, 
+                           with Booking.com at 57% and Expedia at 26%, compared to the official 
+                           hotel websites with an average cancellation rate of 14%"),
+                tabPanel("Income",
+                         "Cancellations can have a bad effect on the hotels involved. 
+                           A loss of income occurs as a result of unsold rooms and no-shows"),
+                tabPanel("Engagement",
+                         "It’s been noted that, if a hotel staff contacts the customer, 
+                           the cancellation probability reduces by 30%, and if the customer responds, 
+                           the probability reduces further to 1/3 of the usual")
               ),
               box(
                 title = "Hotel type vs Cancellation", status = "primary", width = 4,
