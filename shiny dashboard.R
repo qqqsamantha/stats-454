@@ -49,6 +49,22 @@ hotel_clean <- hotel %>%
 set.seed(123)
 hotel_sub <- hotel_clean %>% sample_n(1000)
 
+hotel_lasso <- hotel_clean %>% 
+  select(-meal, -lead_time, -stays_in_weekend_nights, 
+         -stays_in_week_nights, -adults, -previous_bookings_not_canceled, 
+         -booking_changes, -adr)
+
+set.seed(123)
+hotel_lasso <- hotel_lasso %>% sample_n(1000)
+
+hotel_hs <- hotel_clean %>% 
+  select(-lead_time, -adults, -babies, -stays_in_weekend_nights, 
+         -stays_in_week_nights, -previous_bookings_not_canceled, 
+         -booking_changes, -adr, -reserved_room_type, -meal)
+
+set.seed(123)
+hotel_hs <- hotel_hs %>% sample_n(1000)
+
 lasso_matrix<-classification_summary(
   model = bayes_lasso_log_updated, 
   data = hotel_lasso,
@@ -135,7 +151,7 @@ body <- dashboardBody(
                          representative to identify those who are more likely to cancel. ")
               ),
               box(
-                title = "Hotel type vs Cancellation", status = "primary", width = 4,
+                title = "Hotel type vs. Cancellation", status = "primary", width = 4,
                 plotOutput("plot1"),
                 p("In general, there are more city hotel than resort hotel 
                   in our dataset. However, when looking at the hotels that have been canceled, 
@@ -145,7 +161,7 @@ body <- dashboardBody(
                   Then we look at previous cancellations which may reflect the customers behaviors")
               ),
               box(
-                title = "Previous Cancellation vs Cancellation", status = "warning", width = 4,
+                title = "Previous Cancellation vs. Cancellation", status = "warning", width = 4,
                 plotOutput("plot2"),
                 p("From the graph above, we can see that those who did not cancel last time are also 
                   less likely to cancel this time than those who did cancel. "),
@@ -153,7 +169,7 @@ body <- dashboardBody(
                     all three parameters we have discussed.")
               ),
               box(
-                title = "Hotel Type vs Previous Cancellation vs Cancellation",
+                title = "Hotel Type vs. Previous Cancellation vs. Cancellation",
                 status = "success",
                 width = 4,
                 plotOutput("plot3"),
@@ -566,32 +582,42 @@ server <- function(input, output) {
     hotel_sub %>% 
       ggplot(aes(x = hotel, fill = is_canceled)) +
       geom_bar()+
-      scale_fill_manual(values = c("#FF651D","#3487D5"))+
+      scale_fill_manual(
+        name = "Hotel Canceled",
+        values = c("#FF651D","#3487D5"))+
       theme(panel.grid.major = element_blank(), 
             panel.grid.minor = element_blank(),
             panel.background = element_blank(), 
-            axis.line = element_line(colour = "black"))
+            axis.line = element_line(colour = "black"))+
+      xlab("Hotel Type")
   })
   
   output$plot2 <- renderPlot({
     hotel_sub %>% 
       ggplot(aes(x = previous_cancellations, fill = is_canceled)) +
       geom_bar()+
-      scale_fill_manual(values = c("#FF651D","#3487D5"))+
+      scale_fill_manual(
+        name = "Hotel Canceled",
+        values = c("#FF651D","#3487D5"))+
       theme(panel.grid.major = element_blank(), 
             panel.grid.minor = element_blank(),
             panel.background = element_blank(), 
-            axis.line = element_line(colour = "black"))
+            axis.line = element_line(colour = "black"))+
+      xlab("Previous Cancellation")
   })
   
   output$plot3 <- renderPlot({
     ggplot(hotel_sub, aes(x = hotel, y = is_canceled, color = previous_cancellations)) +
       geom_jitter(height = 0.25) +
-      scale_color_manual(values = c("#FF651D","#3487D5"))+
+      scale_color_manual(
+        name = "Previous Cancellations",
+        values = c("#FF651D","#3487D5"))+
       theme(panel.grid.major = element_blank(), 
             panel.grid.minor = element_blank(),
             panel.background = element_blank(), 
-            axis.line = element_line(colour = "black"))
+            axis.line = element_line(colour = "black"))+
+      xlab("Hotel Type")+
+      ylab("Hote Canceled")
   })
   
   output$plot4 <- renderPlot({
