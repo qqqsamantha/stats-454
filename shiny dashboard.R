@@ -49,6 +49,33 @@ hotel_clean <- hotel %>%
 set.seed(123)
 hotel_sub <- hotel_clean %>% sample_n(1000)
 
+lasso_matrix<-classification_summary(
+  model = bayes_lasso_log_updated, 
+  data = hotel_lasso,
+  cutoff = 0.5)$confusion_matrix %>% 
+  as.data.frame()
+
+
+lasso_table <- data.frame(
+  metrics = c("sensitivity","specificity","accuracy"),
+  value = classification_summary(
+    model = bayes_lasso_log_updated, 
+    data = hotel_lasso,
+    cutoff = 0.5)$accuracy_rate)
+
+hs_matrix <- classification_summary(
+  model = log_hs_model_updated, 
+  data = hotel_hs,
+  cutoff = 0.5)$confusion_matrix %>% 
+  as.data.frame()
+
+hs_table <- data.frame(
+  metrics = c("sensitivity","specificity","accuracy"),
+  value = classification_summary(
+    model = log_hs_model_updated, 
+    data = hotel_hs,
+    cutoff = 0.5)$accuracy_rate)
+
 
 
 head <- dashboardHeader(title = "My Dashboard")
@@ -91,18 +118,21 @@ body <- dashboardBody(
                     https://www.kaggle.com/jessemostipak/hotel-booking-demand")
               ),
               tabBox(
-                title = "Motivation", width = 6, height = "250px",
+                title = "Motivation", width = 6, height = "230px",
                 tabPanel("Trend", 
-                         "There has been an overall growing trend for hotel cancellations, 
-                           with Booking.com at 57% and Expedia at 26%, compared to the official 
-                           hotel websites with an average cancellation rate of 14%"),
-                tabPanel("Income",
-                         "Cancellations can have a bad effect on the hotels involved. 
-                           A loss of income occurs as a result of unsold rooms and no-shows"),
+                         "Why are we doing this project. Why should we care about who will 
+                         cancel the hotel reservation? There has been a growing trend for cancellation. 
+                         Booking. Com and expedia have cancellation rates of 57% and 26% compared to the
+                         official hotel websites with an average cancellations rate of 14%. 
+                         However, such growing in cancellations is not a good thing for the hotels. 
+                         A loss of income occurs as a result of no show or unsold rooms."),
                 tabPanel("Engagement",
-                         "It’s been noted that, if a hotel staff contacts the customer, 
-                           the cancellation probability reduces by 30%, and if the customer responds, 
-                           the probability reduces further to 1/3 of the usual")
+                         "It has been noted that if  hotel staff contacts the customer, 
+                         the cancellation probability will reduce by 30%. That’s been said 
+                         if the hotel staff can correctly identify those who are likely to 
+                         cancel and reach out to them, then the loss in revenue can be reduced. 
+                         Therefore, we set our ultimate goal is to produce a shiny app for the hotel 
+                         representative to identify those who are more likely to cancel. ")
               ),
               box(
                 title = "Hotel type vs Cancellation", status = "primary", width = 4,
@@ -429,14 +459,29 @@ body <- dashboardBody(
     ),
     tabItem(tabName = "Model_Evaluation",
             fluidRow(
+              column(
+                width = 12,
+                box(
+                  width = 4,
+                  title = "Lasso Model Evaluation", status = "warning", solidHeader = TRUE,
+                  tableOutput("table1"),
+                  tableOutput("table2")
+                ),
+                box(
+                  plotOutput("plot4")
+                )
+              ),
               column( width = 12,
                       box(
-                        plotOutput("plot4")
+                        width = 4,
+                        title = "Horseshoe Model Evaluation", status = "success", solidHeader = TRUE,
+                        tableOutput("table3"),
+                        tableOutput("table4")
                       ),
                       box(
                         plotOutput("plot5")
-                      )
-              )
+                      ))
+              
             ))
   ))
 
@@ -471,7 +516,11 @@ server <- function(input, output) {
       ggplot(aes(x = y, y = prop, fill = y)) +
       geom_col()+
       scale_fill_manual(values = c("#FF651D","#3487D5"))+
-      theme(legend.position = "none")+
+      theme(legend.position = "none",
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(), 
+            axis.line = element_line(colour = "black"))+
       labs(title = "Probability of hotel Cancellation") +
       xlab("Hotel canceled or not")+
       ylab("Probability")
@@ -503,7 +552,11 @@ server <- function(input, output) {
       ggplot(aes(x = y, y = prop, fill = y)) +
       geom_col() +
       scale_fill_manual(values = c("#FF651D","#3487D5"))+
-      theme(legend.position = "none")+
+      theme(legend.position = "none",
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(), 
+            axis.line = element_line(colour = "black"))+
       labs(title = "Probability of hotel Cancellation") +
       xlab("Hotel canceled or not")+
       ylab("Probability")
@@ -513,20 +566,32 @@ server <- function(input, output) {
     hotel_sub %>% 
       ggplot(aes(x = hotel, fill = is_canceled)) +
       geom_bar()+
-      scale_fill_manual(values = c("#FF651D","#3487D5"))
+      scale_fill_manual(values = c("#FF651D","#3487D5"))+
+      theme(panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(), 
+            axis.line = element_line(colour = "black"))
   })
   
   output$plot2 <- renderPlot({
     hotel_sub %>% 
       ggplot(aes(x = previous_cancellations, fill = is_canceled)) +
       geom_bar()+
-      scale_fill_manual(values = c("#FF651D","#3487D5"))
+      scale_fill_manual(values = c("#FF651D","#3487D5"))+
+      theme(panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(), 
+            axis.line = element_line(colour = "black"))
   })
   
   output$plot3 <- renderPlot({
     ggplot(hotel_sub, aes(x = hotel, y = is_canceled, color = previous_cancellations)) +
       geom_jitter(height = 0.25) +
-      scale_color_manual(values = c("#FF651D","#3487D5"))
+      scale_color_manual(values = c("#FF651D","#3487D5"))+
+      theme(panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(), 
+            axis.line = element_line(colour = "black"))
   })
   
   output$plot4 <- renderPlot({
@@ -536,6 +601,11 @@ server <- function(input, output) {
   output$plot5 <- renderPlot({
     pp_check(bayes_lasso_log_updated)
   })
+  
+  output$table1 <- renderTable(lasso_matrix)
+  output$table2 <- renderTable(lasso_table)
+  output$table3 <- renderTable(hs_matrix)
+  output$table4 <- renderTable(hs_table)
 }
 
 shinyApp(ui, server)

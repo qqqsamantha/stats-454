@@ -89,7 +89,11 @@ hotel_sub %>%
 hotel_sub %>% 
   ggplot(aes(x = hotel, fill = is_canceled)) +
   geom_bar() +
-  scale_fill_brewer(palette="Blues")
+  scale_fill_brewer(palette="Blues")+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
   
 ```
 
@@ -101,7 +105,11 @@ hotel_sub %>%
 hotel_sub %>% 
   ggplot(aes(x = previous_cancellations, fill = is_canceled)) +
   geom_bar(position = "fill") +
-  scale_fill_brewer(palette="Blues")
+  scale_fill_brewer(palette="Blues")+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
 ```
 
 > From the graph above, we can see that those who did not cancel last time are also less likely to cancel this time than those who did cancel. 
@@ -112,7 +120,11 @@ hotel_sub %>%
 hotel_sub %>% 
   ggplot(aes(x = hotel, fill = previous_cancellations)) +
   geom_bar(position = "fill")+
-  scale_fill_brewer(palette="Blues")
+  scale_fill_brewer(palette="Blues")+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
 ```
 
 > It is clear that for those who previously canceled, there are more City Hotel than Resort Hotel.
@@ -122,7 +134,11 @@ hotel_sub %>%
 ```{r}
 ggplot(hotel_sub, aes(x = hotel, y = is_canceled, color = previous_cancellations)) +
   geom_jitter(height = 0.25) +
-  scale_color_manual(values = c("steelblue","red"))
+  scale_color_manual(values = c("steelblue","red"))+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
 ```
 
 > We can see a clear cluster that those which is a City Hotel and who has previously canceled the hotel would devote the most cases to the hotel cancellations. Hotel type and previous_cancellations are 2 strong predictors.
@@ -282,15 +298,14 @@ saveRDS(bayes_lasso_log_updated,
 ```
 
 ```{r}
+bayes_lasso_log_updated <- readRDS(here("bayes_lasso_log_updated.rds"))
+```
+
+```{r}
 tidy(bayes_lasso_log_updated, 
      effects = c("fixed", "aux"),
      conf.int = TRUE, 
      conf.level = 0.8)
-
-set.seed(112)
-prediction_summary_cv(model = bayes_lasso_log_updated, 
-                      data = hotel_lasso, 
-                      k = 10)
 ```
 
 
@@ -470,10 +485,31 @@ pp_check(log_hs_model)
 ```
 
 ```{r}
-set.seed(454)
-classification_summary_cv(
- model = log_hs_model_updated, data = hotel_hs,
- cutoff = 0.5,
- k = 5)
+lasso_matrix<-classification_summary(
+  model = bayes_lasso_log_updated, 
+  data = hotel_lasso,
+  cutoff = 0.5)$confusion_matrix %>% 
+  as.data.frame()
+
+
+lasso_table <- data.frame(
+  metrics = c("sensitivity","specificity","accuracy"),
+  value = classification_summary(
+            model = bayes_lasso_log_updated, 
+            data = hotel_lasso,
+            cutoff = 0.5)$accuracy_rate)
+
+hs_matrix <- classification_summary(
+  model = log_hs_model_updated, 
+  data = hotel_hs,
+  cutoff = 0.5)$confusion_matrix %>% 
+  as.data.frame()
+
+hs_table <- data.frame(
+  metrics = c("sensitivity","specificity","accuracy"),
+  value = classification_summary(
+            model = log_hs_model_updated, 
+            data = hotel_hs,
+            cutoff = 0.5)$accuracy_rate)
 ```
 
