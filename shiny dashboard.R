@@ -78,32 +78,32 @@ hs_table <- data.frame(
 
 
 
-head <- dashboardHeader(title = "My Dashboard")
+head <- dashboardHeader(title = "Hotel Cancellation Prediction")
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
-    menuItem("Background",
-             tabName = "Background",
-             icon = icon("th")),
+    menuItem("About",
+             tabName = "About",
+             icon = icon("book")),
     menuItem("Model Notation",
              tabName = "Model_Notation",
-             icon = icon("th")),
+             icon = icon("buffer")),
     menuItem("Bayes Logistic Lasso", 
              tabName = "Bayes_Logistic_Lasso", 
-             icon = icon("dashboard")),
+             icon = icon("battle-net")),
     menuItem("Horseshoe", 
              tabName = "Horseshoe", 
-             icon = icon("th")),
+             icon = icon("atom")),
     menuItem("Model Evaluation", 
              tabName = "Model_Evaluation", 
-             icon = icon("th"))
+             icon = icon("balance-scale"))
   )
 )
 
 
 body <- dashboardBody(
   tabItems(
-    tabItem(tabName ="Background",
+    tabItem(tabName ="About",
             fluidRow(
               box(
                 title = "About the Data", status = "primary", solidHeader = TRUE, width = 6,

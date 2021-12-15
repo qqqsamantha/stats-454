@@ -485,31 +485,14 @@ pp_check(log_hs_model)
 ```
 
 ```{r}
-lasso_matrix<-classification_summary(
+classification_summary(
   model = bayes_lasso_log_updated, 
   data = hotel_lasso,
-  cutoff = 0.5)$confusion_matrix %>% 
-  as.data.frame()
+  cutoff = 0.5)
 
-
-lasso_table <- data.frame(
-  metrics = c("sensitivity","specificity","accuracy"),
-  value = classification_summary(
-            model = bayes_lasso_log_updated, 
-            data = hotel_lasso,
-            cutoff = 0.5)$accuracy_rate)
-
-hs_matrix <- classification_summary(
+classification_summary(
   model = log_hs_model_updated, 
   data = hotel_hs,
-  cutoff = 0.5)$confusion_matrix %>% 
-  as.data.frame()
-
-hs_table <- data.frame(
-  metrics = c("sensitivity","specificity","accuracy"),
-  value = classification_summary(
-            model = log_hs_model_updated, 
-            data = hotel_hs,
-            cutoff = 0.5)$accuracy_rate)
+  cutoff = 0.5)
 ```
 
